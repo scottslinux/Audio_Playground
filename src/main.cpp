@@ -6,11 +6,15 @@
 #define I2S_LRC   27     // MAX98357A LRC / WS
 #define I2S_DOUT  15     // MAX98357A DIN
 
+#define Push_Button A5
+
 #define SAMPLE_RATE 22000
 
 void setup() {
     Serial.begin(9600);
     delay(1000);
+
+    pinMode(Push_Button, INPUT_PULLUP);
 
     Serial.println("Starting audio....");
 
@@ -39,20 +43,30 @@ void setup() {
     i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
     i2s_set_pin(I2S_NUM_0, &pin_config);
 
-    Serial.println("Playing...");
-
-    size_t bytes_written;
-
-    i2s_write(
-        I2S_NUM_0,
-        clip_raw,
-        clip_raw_len,
-        &bytes_written,
-        portMAX_DELAY
-    );
-
-    Serial.println("Done.");
+    
 }
 
 void loop() {
+
+    Serial.println(digitalRead(Push_Button));
+
+    if(!digitalRead(Push_Button))
+    {       delay(500);
+
+            Serial.println("Playing...");
+
+            size_t bytes_written;
+
+            i2s_write(
+                I2S_NUM_0,
+                clip_raw,
+                clip_raw_len,
+                &bytes_written,
+                portMAX_DELAY
+            );
+
+            Serial.println("Done.");
+
+    }
+
 }
