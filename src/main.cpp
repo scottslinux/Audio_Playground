@@ -1,16 +1,38 @@
 #include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+#include <XPT2046_Touchscreen.h>
+#include <SPI.h>
 #include "driver/i2s.h"
-#include "clip.h"
+#include "Elvis.h"
 
 #define I2S_BCLK  33     // MAX98357A BCLK
 #define I2S_LRC   27     // MAX98357A LRC / WS
 #define I2S_DOUT  15     // MAX98357A DIN
+
+#define CS 14
+#define DC 12
+#define Reset 32
+#define touch_CS 13
+
+Adafruit_ILI9341 tft(CS,DC,Reset);
+XPT2046_Touchscreen ts(touch_CS);
+
+
 
 #define Push_Button A5
 
 #define SAMPLE_RATE 22000
 
 void setup() {
+
+    tft.begin();
+    tft.fillScreen(ILI9341_GREEN);
+
+    ts.begin();
+    
+
+
     Serial.begin(9600);
     delay(1000);
 
@@ -48,7 +70,6 @@ void setup() {
 
 void loop() {
 
-    Serial.println(digitalRead(Push_Button));
 
     if(!digitalRead(Push_Button))
     {       delay(500);
@@ -59,14 +80,36 @@ void loop() {
 
             i2s_write(
                 I2S_NUM_0,
-                clip_raw,
-                clip_raw_len,
+                Elvis_raw,
+                Elvis_raw_len,
                 &bytes_written,
                 portMAX_DELAY
             );
 
             Serial.println("Done.");
 
+    }
+
+    if(ts.touched())
+    {
+        TS_Point p;
+        p=ts.getPoint();
+
+        //Serial.print(p.x);
+        //Serial.print(" , ");
+        //Serial.println(p.y);
+
+        int screenX=map(p.y,350,3800,0,239);        //flipping X and Y
+        int screenY=map(p.x,3800,300,0,319);
+        screenX=constrain(screenX,0,239);
+        screenY=constrain(screenY,0,319);
+
+        tft.fillCircle(screenX,screenY,5,ILI9341_BLACK);
+
+        Serial.print(screenX);
+        Serial.print(" , ");
+        Serial.println(screenY);
+        Serial.println("------------------------");
     }
 
 }
